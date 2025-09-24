@@ -1,0 +1,14 @@
+# Core
+torch
+tqdm>=4.66
+
+# Data + HF stack
+transformers>=4.45,<5.0
+datasets>=2.20,<3.0
+tokenizers>=0.19,<0.23
+huggingface-hub>=0.23
+pyarrow>=14
+
+# Utilities
+requests>=2.31
+pyyaml>=6.0
