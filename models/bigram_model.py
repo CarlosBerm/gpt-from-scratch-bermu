@@ -4,24 +4,28 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class BigramLanguageModel(nn.Module):
+
     def __init__(self, vocab_size):
         super().__init__()
         self.token_embedding_table = nn.Embedding(vocab_size, vocab_size)
-    
+        # On embedding: https://stackoverflow.com/questions/44881999/word-embedding-lookuptable-word-embedding-visualizations
+
     def forward(self, idx):
         """
-        idx -> (B, T)
-        targets -> (B, T)
-        """
+        idx -> (B,T)
+        targets -> (B,T)"""
 
-        logits = self.token_embedding_table(idx) # (B, T, C)
+        logits = self.token_embedding_table(idx) # (B,T,C)
         return logits
 
-    def training_step(self, logits):
+    def configure_optimizer(self):
+        return torch.optim.AdamW(self.parameters(), lr=1e-3)
+    
+    def training_step(self, input, target):
+        logits = self.token_embedding_table(input)
         B, T, C = logits.shape
         logits = logits.view(B*T, C)
-        targets = targets.view(B*T)
-
+        targets = target.view(B*T)
         loss = F.cross_entropy(logits, targets)
 
         return loss
@@ -37,19 +41,20 @@ class BigramLanguageModel(nn.Module):
 
         return idx
     
-vocab_size = 65
+def generate_letters(vocab_size):
+    model = BigramLanguageModel(vocab_size)
+    wordsList = model.generate(torch.zeros((1, 1), dtype=torch.long), max_new_tokens=1000).tolist()
 
-model = BigramLanguageModel(vocab_size)
-wordsList = model.generate(torch.zeros((1, 1), dtype=torch.long), max_new_tokens=1000).tolist()
+    alphabet = list(string.ascii_lowercase + string.ascii_uppercase)
+    letter_to_num = {letter: idx for idx, letter in enumerate(alphabet)}
 
-alphabet = list(string.ascii_lowercase + string.ascii_uppercase)
-letter_to_num = {letter: idx for idx, letter in enumerate(alphabet)}
+    num_to_letter = {idx: letter for letter, idx in letter_to_num.items()}
 
-num_to_letter = {idx: letter for letter, idx in letter_to_num.items()}
+    matched_letters = []
+    for num in wordsList[0]:
+        letter = num_to_letter.get(num, '?')
+        matched_letters.append(letter)
+        
+    return matched_letters
 
-matched_letters = []
-for num in wordsList[0]:
-    letter = num_to_letter.get(num, '?')
-    matched_letters.append(letter)
-
-print("Generated letters:", matched_letters)
+# print("Generated letters:", generate_letters(65))
