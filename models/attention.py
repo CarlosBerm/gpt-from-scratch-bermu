@@ -8,9 +8,9 @@ class Attention(nn.Module):
     def __init__(self, d_model):
         super().__init__()
 
-        self.W_q =
-        self.W_k =
-        self.W_v =
+        self.W_q = nn.Linear(in_features=d_model, out_features=d_model)
+        self.W_k = nn.Linear(in_features=d_model, out_features=d_model)
+        self.W_v = nn.Linear(in_features=d_model, out_features=d_model)
 
         self.row_dim = 1
         self.col_dim = 2
@@ -20,18 +20,21 @@ class Attention(nn.Module):
         Apply the attention calculation, with an optional mask of booleans"""
 
          # encodings_*: (batch, seq_len, d_model)
-        q = 
-        k = 
-        v = 
+        q = self.W_q(encodings_q)
+        k = self.W_k(encodings_k)
+        v = self.W_v(encodings_v)
 
         # (batch, seq_len, d_model) @ (batch, d_model, seq_len) -> (batch, seq_len, seq_len)
+        simularity_score = torch.matmul(q, k.transpose(dim0=self.row_dim, dim1=self.col_dim))
+        scaled_sim_score = simularity_score / q.size(self.col_dim)**0.5
 
         if mask is not None:
-            # Mask logic
+            scaled_sim_score = scaled_sim_score.masked_fill(mask, value=-1e9)
             
-        attention_percents =
+        attention_percents = F.softmax(scaled_sim_score, dim=self.col_dim)
+        attention = torch.matmul(attention_percents, v)
 
-        return
+        return attention
 
 
 class MultiHeadAttention:
