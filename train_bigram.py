@@ -42,7 +42,6 @@ decode = lambda l: ''.join([itos[i] for i in l])
 
 
 data = torch.tensor(encode(text), dtype=torch.long)
-chars = sorted(list(set(text)))
 vocab_size = len(chars)
 print("Finished Tokenizing")
 
